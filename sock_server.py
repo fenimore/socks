@@ -1,24 +1,26 @@
+"""Chat server.
+
+A simple chat server
+"""
 import socket, select
 
-# Add broadcast message to all connected clients
 
-# Do not send the message to master socket and the client
-
-def broadcast(sock, message):
+def broadcast_data(server, sock, message):
     """Broadcast message to all connections.
 
     Keyword arguments:
         - sock -- to no send message to the sender
         - message -- text to broadcast, include user
     """
-    
-    for suck in CONNECTIONS:
-        if suck != base_socket and socket != sock:
+    print('BROADCASTING')
+    for connection in CONNECTIONS:
+        if connection != server and connection != sock:
             try:
-                suck.send(message)
+                connection.send(message)
             except:
-                suck.close()
-                CONNECTIONS.remove(suck)
+                print('\nclosing\n')
+                connection.close()
+                CONNECTIONS.remove(connection)
 
 if __name__ == "__main__":
     """Keep track of sockets
@@ -43,33 +45,30 @@ if __name__ == "__main__":
     base_socket.listen(10) # ten connections
 
     CONNECTIONS.append(base_socket)
-
     print('Chat server on port:', str(PORT))
 
-
-    
     while True:
         # https://docs.python.org/3/howto/sockets.html
-        ready_read, ready_write, in_error = select.select(CONNECTIONS,
-                                                          [], [])
+        ready_read, ready_write, in_error = select.select(CONNECTIONS,[], [])
         for sock in ready_read:
             if sock == base_socket:
-                (client, address) = sock.accept() # or base_socket
+                (client, address) = base_socket.accept() # or base_socket
                 CONNECTIONS.append(client)
                 print('Client connected:', address)
-                broadcast(sock, '(%s, %s) enters chat' % address)
+                #broadcast_data(base_socket, client, 'connection made')
             else:
                 try:
                     data = sock.recv(BUFFER)
-                    if data:
-                        broadcast(sock, '<'
-                                  + str(sock.getpeername())
-                                  + '>' + data)
+                    print(data)
+                    broadcast_data(base_socket, sock, data)
+                    #if data:
+                        #broadcast_data(base_socket, sock, "\r" + '<' + str(sock.getpeername()) + '> ' + str.encode(data))   
                 except:
-                    broadcast(sock, '<' + str(sock.getpeername())
-                              + '> has left the chat')
+                    broadcast_data(base_socket, sock, "Client (%s, %s) is offline" % address)
+                    print("Client (%s, %s) is offline" % address)
                     sock.close()
                     CONNECTIONS.remove(sock)
+                    continue
 
-        base_socket.close()
+    base_socket.close()
                 

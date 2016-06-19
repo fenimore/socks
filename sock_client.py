@@ -35,14 +35,14 @@ if __name__ == '__main__':
         for sock in ready_read:
             if sock == server_socket:
                 data = sock.recv(4096)
-                if data:
-                    sys.stdout.write(data)
-                    prompt()
-                else:
+                if not data:
                     print('\nDisconnected')
                     sys.exit()
+                else:
+                    sys.stdout.write(str(data))
+                    prompt()
             else: # User input
                 message = sys.stdin.readline()
-                server_socket.send(message)
+                server_socket.send(str.encode(message))
                 prompt()
             
