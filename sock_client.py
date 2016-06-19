@@ -6,7 +6,7 @@ import socket, select, string, sys
 def prompt():
     """Take user input?"""
     sys.stdout.write('<Me> ')
-    sys.stdout.flush()
+    sys.stdout.flush() # why flush?
 
 if __name__ == '__main__':
     if(len(sys.argv) < 3):
@@ -36,11 +36,11 @@ if __name__ == '__main__':
             if sock == server_socket:
                 data = sock.recv(4096)
                 if not data:
-                    print(sock)
+                    sock.close()
                     print('\nDisconnected')
                     sys.exit()
                 else:
-                    sys.stdout.write('\r< Peer >' + data.decode("utf-8") )
+                    sys.stdout.write(data.decode("utf-8") )
                     prompt()
             else: # User input
                 message = sys.stdin.readline()

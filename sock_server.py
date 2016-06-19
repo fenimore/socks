@@ -4,6 +4,7 @@ A simple chat server
 """
 import socket, select
 
+from sock_names import NAMES
 
 def broadcast_data(server, sock, message):
     """Broadcast message to all connections.
@@ -12,14 +13,15 @@ def broadcast_data(server, sock, message):
         - sock -- to no send message to the sender
         - message -- text to broadcast, include user
     """
-    print('BROADCASTING')
+    print('Broadcast', message)
     for connection in CONNECTIONS:
         if connection != server and connection != sock:
             try:
                 connection.send(message)
             except:
                 print('\nclosing\n')
-                connection.close()
+                #sock.shutdown(socket.SHUT_RDWR)
+                #print(connection.getpeername())
                 CONNECTIONS.remove(connection)
 
 if __name__ == "__main__":
@@ -47,6 +49,7 @@ if __name__ == "__main__":
     CONNECTIONS.append(base_socket)
     print('Chat server on port:', str(PORT))
 
+    client_dict = {}
     while True:
         # https://docs.python.org/3/howto/sockets.html
         ready_read, ready_write, in_error = select.select(CONNECTIONS,[], [])
@@ -54,23 +57,25 @@ if __name__ == "__main__":
             if sock == base_socket:
                 (client, address) = base_socket.accept() # or base_socket
                 CONNECTIONS.append(client)
-                print('Client connected:', address)
-                #broadcast_data(base_socket, client, 'connection made')
+                #print('Client connected:', address)
+                client_dict[str(client.getpeername()[1])] = NAMES[0]
+                NAMES.pop(0)
+                broadcast_data(base_socket, client, b'\r<' + str.encode(client_dict[str(client.getpeername()[1])]) + b'> enters chat\n')
             else:
                 try:
                     data = sock.recv(BUFFER)
-                    user = '\r<' + str(sock.getpeername()[1]) + '> '
-                    print(type(user))
-                    byte_handle = str.encode(user)
-                    print(type(user))
                     if data:
+                        user = '\r<' + client_dict[str(sock.getpeername()[1])] + '> '
+                        byte_handle = str.encode(user)
                         broadcast_data(base_socket, sock, byte_handle + data) 
                 except:
                     broadcast_data(base_socket, sock, "Client (%s, %s) is offline" % address)
                     print("Client (%s, %s) is offline" % address)
-                    sock.close()
+                    sock.shutdown(socket.SHUT_RDWR)
                     CONNECTIONS.remove(sock)
                     #continue
-
+            if sock not in CONNECTIONS:
+                print('termination time')
+                sock.close()
     base_socket.close()
                 
