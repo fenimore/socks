@@ -36,10 +36,11 @@ if __name__ == '__main__':
             if sock == server_socket:
                 data = sock.recv(4096)
                 if not data:
+                    print(sock)
                     print('\nDisconnected')
                     sys.exit()
                 else:
-                    sys.stdout.write(str(data))
+                    sys.stdout.write('\r< Peer >' + data.decode("utf-8") )
                     prompt()
             else: # User input
                 message = sys.stdin.readline()

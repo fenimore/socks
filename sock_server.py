@@ -59,16 +59,18 @@ if __name__ == "__main__":
             else:
                 try:
                     data = sock.recv(BUFFER)
-                    print(data)
-                    broadcast_data(base_socket, sock, data)
-                    #if data:
-                        #broadcast_data(base_socket, sock, "\r" + '<' + str(sock.getpeername()) + '> ' + str.encode(data))   
+                    user = '\r<' + str(sock.getpeername()[1]) + '> '
+                    print(type(user))
+                    byte_handle = str.encode(user)
+                    print(type(user))
+                    if data:
+                        broadcast_data(base_socket, sock, byte_handle + data) 
                 except:
                     broadcast_data(base_socket, sock, "Client (%s, %s) is offline" % address)
                     print("Client (%s, %s) is offline" % address)
                     sock.close()
                     CONNECTIONS.remove(sock)
-                    continue
+                    #continue
 
     base_socket.close()
                 
