@@ -5,6 +5,13 @@ import socket, select
 # Do not send the message to master socket and the client
 
 def broadcast(sock, message):
+    """Broadcast message to all connections.
+
+    Keyword arguments:
+        - sock -- to no send message to the sender
+        - message -- text to broadcast, include user
+    """
+    
     for suck in CONNECTIONS:
         if suck != base_socket and socket != sock:
             try:
@@ -42,7 +49,6 @@ if __name__ == "__main__":
 
     
     while True:
-        # use select to find readable sockets, 
         # https://docs.python.org/3/howto/sockets.html
         ready_read, ready_write, in_error = select.select(CONNECTIONS,
                                                           [], [])
