@@ -1,1 +1,1 @@
-NAMES = ['alpha', 'beta', 'gamma', 'delta',]
+NAMES = ['alpha', 'beta', 'gamma', 'delta', 'peta', 'lambda', 'panda', 'alakazam']

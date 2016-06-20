@@ -24,6 +24,31 @@ def broadcast_data(server, sock, message):
                 #print(connection.getpeername())
                 CONNECTIONS.remove(connection)
 
+def make_connection(sock, base_socket):
+    # do something
+    client, address = base_socket.accept()
+    CONNECTIONS.append(client)
+    client_dict[str(client.getpeername()[1])] = NAMES[0]
+    NAMES.pop(0)
+    broadcast_data(base_socket, client, b'\r<' 
+        + str.encode(client_dict[str(client.getpeername()[1])])
+        + b'> enters chat\n')
+        
+def forward_message(sock, base_socket):
+    try:
+        data = sock.recv(BUFFER)
+        if data:
+            handle = str.encode('\r<' 
+                + client_dict[str(sock.getpeername()[1])] + '> ')
+            broadcast_data(base_socket, sock, handle + data) 
+    except:
+        broadcast_data(base_socket, sock, "Client (%s, %s) is offline" % address)
+        print("Client (%s, %s) is offline" % address)
+        sock.shutdown(socket.SHUT_RDWR)
+        sock.close()
+        CONNECTIONS.remove(sock)
+
+
 if __name__ == "__main__":
     """Keep track of sockets
     
@@ -55,27 +80,8 @@ if __name__ == "__main__":
         ready_read, ready_write, in_error = select.select(CONNECTIONS,[], [])
         for sock in ready_read:
             if sock == base_socket:
-                (client, address) = base_socket.accept() # or base_socket
-                CONNECTIONS.append(client)
-                #print('Client connected:', address)
-                client_dict[str(client.getpeername()[1])] = NAMES[0]
-                NAMES.pop(0)
-                broadcast_data(base_socket, client, b'\r<' + str.encode(client_dict[str(client.getpeername()[1])]) + b'> enters chat\n')
+                make_connection(sock, base_socket)                
             else:
-                try:
-                    data = sock.recv(BUFFER)
-                    if data:
-                        user = '\r<' + client_dict[str(sock.getpeername()[1])] + '> '
-                        byte_handle = str.encode(user)
-                        broadcast_data(base_socket, sock, byte_handle + data) 
-                except:
-                    broadcast_data(base_socket, sock, "Client (%s, %s) is offline" % address)
-                    print("Client (%s, %s) is offline" % address)
-                    sock.shutdown(socket.SHUT_RDWR)
-                    CONNECTIONS.remove(sock)
-                    #continue
-            if sock not in CONNECTIONS:
-                print('termination time')
-                sock.close()
+                forward_message(sock, base_socket)
     base_socket.close()
-                
+    
