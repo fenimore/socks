@@ -1,2 +1,3 @@
 # sock_notes
-messing around with socket on python
+Messing around with socket on python. A simple chat client and server application for chatting on local host.
+
