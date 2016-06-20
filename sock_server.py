@@ -17,14 +17,8 @@ def broadcast_data(server, sock, message):
     for connection in CONNECTIONS:
         if connection != server and connection != sock:
             try:
-                #print(connection)
-                #print(server)
                 connection.send(message)
             except:
-                #print(connection)
-                #print('\nclosing\n')
-                #sock.shutdown(socket.SHUT_RDWR)
-                #print(connection.getpeername())
                 CONNECTIONS.remove(connection)
 
 def make_connection(sock, base_socket):
@@ -36,15 +30,15 @@ def make_connection(sock, base_socket):
     """
     client, address = base_socket.accept()
     CONNECTIONS.append(client)
-    if NAMES[0]:
+    if NAMES:
         client_dict[str(client.getpeername()[1])] = NAMES[0]
         NAMES.pop(0)
     else: 
         client_dict[str(
             client.getpeername()[1])] = str(client.getpeername()[1])
-    broadcast_data(base_socket, client, b'\r<' 
+    broadcast_data(base_socket, client, b'\r  *' 
         + str.encode(client_dict[str(client.getpeername()[1])])
-        + b'> enters chat\n')
+        + b' enters chat\n')
         
 def forward_message(sock, base_socket):
     """Broadcast message to chat room."""
@@ -56,16 +50,15 @@ def forward_message(sock, base_socket):
             broadcast_data(base_socket, sock, handle + data)
         else: 
             broadcast_data(base_socket, sock, 
-                str.encode('\rClient (%s) is offline\n' 
+                str.encode('\r  *%s leaves chat\n' 
                 % client_dict[str(
                 sock.getpeername()[1])]))             
             sock.shutdown(socket.SHUT_RDWR)
             sock.close()
             CONNECTIONS.remove(sock)
     except:
-        print("Client (%s, %s) is offline" % sock.getpeername())
         broadcast_data(base_socket, sock, 
-            str.encode('\rClient (%s) is offline\n' 
+            str.encode('\r  *%s leaves chat\n' 
             % client_dict[str(sock.getpeername()[1])]))
         sock.shutdown(socket.SHUT_RDWR)
         sock.close()
