@@ -1,0 +1,17 @@
+"""Socks chat client
+
+"""
+import socket, select, string, sys
+
+def prompt():
+    """Take user input?"""
+    sys.stdout.write('<Me> ')
+    sys.stdout.flush()
+
+if __name__ == '__main__':
+    if(len(sys.argv) < 3):
+        print('args missing: host and port')
+        sys.exit()
+
+    host = sys.argv[1]
+    port = int(sys.argv[2]
