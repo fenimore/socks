@@ -36,8 +36,12 @@ def make_connection(sock, base_socket):
     """
     client, address = base_socket.accept()
     CONNECTIONS.append(client)
-    client_dict[str(client.getpeername()[1])] = NAMES[0]
-    NAMES.pop(0)
+    if NAMES[0]:
+        client_dict[str(client.getpeername()[1])] = NAMES[0]
+        NAMES.pop(0)
+    else: 
+        client_dict[str(
+            client.getpeername()[1])] = str(client.getpeername()[1])
     broadcast_data(base_socket, client, b'\r<' 
         + str.encode(client_dict[str(client.getpeername()[1])])
         + b'> enters chat\n')
