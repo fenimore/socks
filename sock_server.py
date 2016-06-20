@@ -17,15 +17,23 @@ def broadcast_data(server, sock, message):
     for connection in CONNECTIONS:
         if connection != server and connection != sock:
             try:
+                #print(connection)
+                #print(server)
                 connection.send(message)
             except:
-                print('\nclosing\n')
+                #print(connection)
+                #print('\nclosing\n')
                 #sock.shutdown(socket.SHUT_RDWR)
                 #print(connection.getpeername())
                 CONNECTIONS.remove(connection)
 
 def make_connection(sock, base_socket):
-    # do something
+    """Set up new connection
+    
+    If readable socket is the server socket, there
+    is a new connection to be made, add it to the 
+    list CONNECTIONS.
+    """
     client, address = base_socket.accept()
     CONNECTIONS.append(client)
     client_dict[str(client.getpeername()[1])] = NAMES[0]
@@ -35,15 +43,26 @@ def make_connection(sock, base_socket):
         + b'> enters chat\n')
         
 def forward_message(sock, base_socket):
+    """Broadcast message to chat room."""
     try:
         data = sock.recv(BUFFER)
         if data:
             handle = str.encode('\r<' 
                 + client_dict[str(sock.getpeername()[1])] + '> ')
-            broadcast_data(base_socket, sock, handle + data) 
+            broadcast_data(base_socket, sock, handle + data)
+        else: 
+            broadcast_data(base_socket, sock, 
+                str.encode('\rClient (%s) is offline\n' 
+                % client_dict[str(
+                sock.getpeername()[1])]))             
+            sock.shutdown(socket.SHUT_RDWR)
+            sock.close()
+            CONNECTIONS.remove(sock)
     except:
-        broadcast_data(base_socket, sock, "Client (%s, %s) is offline" % address)
-        print("Client (%s, %s) is offline" % address)
+        print("Client (%s, %s) is offline" % sock.getpeername())
+        broadcast_data(base_socket, sock, 
+            str.encode('\rClient (%s) is offline\n' 
+            % client_dict[str(sock.getpeername()[1])]))
         sock.shutdown(socket.SHUT_RDWR)
         sock.close()
         CONNECTIONS.remove(sock)
@@ -77,7 +96,8 @@ if __name__ == "__main__":
     client_dict = {}
     while True:
         # https://docs.python.org/3/howto/sockets.html
-        ready_read, ready_write, in_error = select.select(CONNECTIONS,[], [])
+        ready_read, ready_write, in_error = select.select(CONNECTIONS,
+                                                          [], [])
         for sock in ready_read:
             if sock == base_socket:
                 make_connection(sock, base_socket)                
