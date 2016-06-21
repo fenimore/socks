@@ -25,21 +25,20 @@ class ChatServer(object):
     connections = []
     buffer_size = 4096
     port = 1050
+    host = ''
     clients = {}
 
-    def __init__(self, port=1050):
+    def __init__(self, host='', port=1050):
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.port = port
-
+        self.host = host
+        
         self.sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-        self.sock.bind(('0.0.0.0', self.port))
+        self.sock.bind((self.host, self.port))
         self.sock.listen(10) # 10 connections
-
         self.connections.append(self.sock)
-        print('Chat server accepting connections at:', str(port))
-        print(socket.gethostbyname(socket.gethostname()),
-              'get host by name')
-        print(get_local_ip(), 'Domain name')
+        print('Chat server accepting connections:',
+              get_local_ip(), 'port:', str(port))
         while True:
             ready_read, ready_write, in_error = \
                         select.select(self.connections, [], [])
