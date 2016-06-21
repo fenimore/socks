@@ -3,6 +3,9 @@
 A simple chat server
 """
 import socket, select, os, sys
+if os.name != 'nt':
+    import fcntl
+    import struct
 #from time import gmtime, strftime
 
 from sock_names import NAMES
@@ -34,7 +37,9 @@ class ChatServer(object):
 
         self.connections.append(self.sock)
         print('Chat server accepting connections at:', str(port))
-
+        print(socket.gethostbyname(socket.gethostname()),
+              'get host by name')
+        print(get_local_ip(), 'Domain name')
         while True:
             ready_read, ready_write, in_error = \
                         select.select(self.connections, [], [])
@@ -76,9 +81,10 @@ class ChatServer(object):
         else:
             self.clients[peer_name] = peer_name
 
-        self.broadcast_message(client, b'\r * ' 
-                           + str.encode(self.clients[peer_name])
-                           + b' enters chat\n')
+        message =  (b'\r * ' + str.encode(self.clients[peer_name])
+                   + b' enters chat\n')
+        print(str(message))
+        self.broadcast_message(client, message)
         
     def forward_message(self, sender):
         """Broadcast message to chat room.
@@ -96,20 +102,43 @@ class ChatServer(object):
                 message = str.encode('\r<' + h + '> ') + data
                 self.broadcast_message(sender, message)
             else:
-                message = str.encode('\r * %s leaves chat\n'%h) 
+                message = str.encode('\r * %s leaves chat\n'%h)
+                print(str(message))
                 self.broadcast_message(sender, message)
                 sender.shutdown(socket.SHUT_RDWR)
                 sender.close()
                 self.connections.remove(sender)
         except:
             message = str.encode('\r * %s leaves chat\n' %h)
+            print(str(message))
             self.broadcast_message(sender, message)
             sender.shutdown(socket.SHUT_RDWR)
             sender.close()
             self.connections.remove(sender)
 
+def get_local_ip(ifname='wlp3s0'):
+    """Return local ip address.
 
-if __name__ == "__main__":
+    http://stackoverflow.com/questions/166506/finding-local-ip-addresses-using-pythons-stdlib/1947766#1947766
+    """
+    ip = socket.gethostbyname(socket.gethostname())
+    if ip.startswith('127.') and os.name != 'nt':
+        interfaces = ['eth0','eth1','eth2','wlan0','wlp3s0',
+                      'wlan1','wifi0','ath0','ath1','ppp0']
+        for ifname in interfaces:
+            try:
+                s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+                ip =  socket.inet_ntoa(fcntl.ioctl(
+                    s.fileno(),
+                    0x8915, # SIOCGIFADDR
+                    struct.pack('256s', bytes(ifname[:15], 'utf-8'))
+                )[20:24])
+                break
+            except IOError:
+                pass
+    return ip
+            
+if __name__ == '__main__':
     """Keep track of sockets
     
     Start port
